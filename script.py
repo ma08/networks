@@ -1,3 +1,4 @@
+import sys
 f = open(sys.argv[1])
 
 enq = []
@@ -23,8 +24,24 @@ for line in f.readlines():
 
 print "timeFirstTPacket :",deq[0][1]
 print "lastLastTPacket :",deq[-1][1]
-print "timeFirstRPacket :",rec[0][1]
-print "timeLastRPacket :",rec[-1][1]
+print "timeFirstRPacket :",recv[0][1]
+print "timeLastRPacket :",recv[-1][1]
+
+delay=0
+
+for i in range(len(recv)):
+	delay+=float(recv[i][1])-float(deq[i][1])
+
+print "delaySum :",delay
+	
+
+
+
+
+
+
+
+
 
 
 
