@@ -79,7 +79,9 @@ delay=0
 
 for i in range(len(recv)):
     for j in reversed(range(len(deq))):
-        if(recv[i][18]==deq[j][18]):
+        #print(deq[j][18])
+        if(recv[i][18]==deq[j][18] and recv[i][2][10]==deq[j][2][10]):
+            #print(i,j,recv[i][18],deq[j][18],recv[i][10],deq[j][10])
             delay+=float(recv[i][1])-float(deq[j][1])
             break
 
