@@ -1,5 +1,8 @@
 import sys
+import os
 f = open(sys.argv[1])
+
+print os.path.basename(sys.argv[1])[9:-3],
 
 enq = []
 deq = []
@@ -60,7 +63,7 @@ for i in reversed(range(len(recv))):
 		rLast1=float(recv[i][1])
 		break
 
-print(eFirst0,eFirst1,rLast0,rLast1)
+#print(eFirst0,eFirst1,rLast0,rLast1)
 t0=rLast0-eFirst0
 t1=rLast1-eFirst1
 
@@ -69,12 +72,20 @@ tot_time=float(recv[-1][1])-float(enq[-1][1])
 
 
 
-print "timeFirstTPacket :",deq[0][1]
-print "lastLastTPacket :",deq[-1][1]
-print "timeFirstRPacket :",recv[0][1]
-print "timeLastRPacket :",recv[-1][1]
+#print "timeFirstTPacket :",deq[0][1]
+#print "timeLastTPacket :",deq[-1][1]
+#print "timeFirstRPacket :",recv[0][1]
+#print "timeLastRPacket :",recv[-1][1]
+
+print deq[0][1],
+print deq[-1][1],
+print recv[0][1],
+print recv[-1][1],
+
 
 delay=0
+
+timesForwarded=len(deq)-len(enq)
 
 
 for i in range(len(recv)):
@@ -86,14 +97,25 @@ for i in range(len(recv)):
             break
 
 
-print "delaySum :",delay
-print "tBytes :",tBytes
-print "rBytes :",rBytes
-print "lostPackets :",len(deq)-len(recv)
-print "timesForwarded :",len(deq)-len(enq)
-print "packetsDropped :",len(drop), ", bytesDropped: ", sumDropped 
-print "transmitterThroughput Node0: ", str0/t0, ", transmitterThroughput Node1: ",str1/t1
-print "receiverThroughput Node0: ", sre0/t0, ", receiverThroughput Node1: ",sre1/t1
+#print "delaySum :",delay
+#print "tBytes :",tBytes
+#print "rBytes :",rBytes
+#print "lostPackets :",len(deq)-len(recv) - timesForwarded 
+#print "timesForwarded :",timesForwarded
+#print "packetsDropped :",len(drop), ", bytesDropped: ", sumDropped 
+#print "transmitterThroughput Node0: ", str0/t0, ", transmitterThroughput Node1: ",str1/t1
+#print "receiverThroughput Node0: ", sre0/t0, ", receiverThroughput Node1: ",sre1/t1
+
+print delay,
+print tBytes,
+print rBytes,
+print len(deq)-len(recv) - timesForwarded ,
+print timesForwarded,
+print len(drop),  sumDropped ,
+print "Node0: ", str0/t0, ",Node1: ",str1/t1,
+print "Node0: ", sre0/t0, ", Node1: ",sre1/t1,
+
+
 
 
 
