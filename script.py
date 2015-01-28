@@ -76,8 +76,12 @@ print "timeLastRPacket :",recv[-1][1]
 
 delay=0
 
+
 for i in range(len(recv)):
-	delay+=float(recv[i][1])-float(deq[i][1])
+    for j in reversed(range(len(deq))):
+        if(recv[i][18]==deq[j][18]):
+            delay+=float(recv[i][1])-float(deq[j][1])
+            break
 
 
 print "delaySum :",delay
