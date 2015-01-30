@@ -1,0 +1,21 @@
+The impact of packet size and size of intervals over the different statistical performance parameters is :
+
+1)timeFirstTPacket : The time the first packet is transmitted is the same for all the different packet sizes and intervals as the time of first dequeue does not change.
+
+2)timeLastTPacket : The time the last packet is transmitted increases with increase in packet size as the time is taken to transmit all the previous packets increases with packet size. But, it decreases with increase in interval as the packet transmitted earlier were not received till the end of 10 seconds so the time last packet was sent will be earlier for bigger interval as it is not yet received before the program terminates.
+
+3)timeFirstRPacket : The time the first packet is received is greater for greater packet sizes as more data has to be transmitted and is the same for all the interval sizes as packet size,speed and time of transmitting are same.
+
+4)timeLastRPacket : The time the last packer is received is greater for greater packet sizes as more data has to be transmitted for each packet and decreases with increase in interval as more time is taken for the interval and the last packet transmitted is not received before the program ends.
+
+5)DelaySum : DelaySum increases with increase in both packet size and interval as more time is taken for the packet to be transmitted and the size of interval is greater respectively.
+
+6)tBytes,tPackets : tBytes increases proportionally with packet size due to more data being sent and decreases proportionally with interval due to less number of packets sent.The trend is reverse for tPackets with packet size and same as tBytes for interval increase.
+
+7)rBytes,rPackets : rBytes and rPackets exhibit the same trends as tBytes and tPackets as every packet transmitted is received.
+
+8)lostPackets,timesForwarded,BytesDropped,PacketsDropped : They are all zero as no packet is lost or dropped or forwarded.
+
+9)transmitterThroughput : The throughput increases with packet size as more data is transmitted from a node and decreases with interval as less packets are transmitted. We also observe that the transmitter throughput of node 1 is slightly greater than node 0 in every case.
+
+10)receiverThroughput : It shows the same trends as transmitterThroughput mentioned above as there is no packet loss.
