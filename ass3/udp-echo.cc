@@ -26,20 +26,22 @@
 // - Tracing of queues and packet receptions to file "udp-echo.tr"
 
 #include <fstream>
+#include <iostream>
+#include <string>
+#include <sstream>
 #include <stdlib.h>
 #include "ns3/core-module.h"
 #include "ns3/csma-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/rng-seed-manager.h"
-#include<time.h>
+#include <time.h>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("UdpEchoExample");
 
-int 
-main (int argc, char *argv[])
+int networks(int argc, char *argv[],int runno)
 {
 //
 // Users may find it convenient to turn on explicit debugging
@@ -177,10 +179,17 @@ main (int argc, char *argv[])
   uint8_t fill[] = { 0, 1, 2, 3, 4, 5, 6};
   client.SetFill (apps.Get (0), fill, sizeof(fill), 1024);
 #endif
-
+  std::string s1(argv[2]),s2(argv[3]);
+  std::stringstream ss;
+  ss<<runno;
+  std::string s3;
+  ss>>s3;
+  std::string s="udp-echo-"+s1+"-"+s2+"-"+"run-"+s3;
+  std::string t=s+".tr";
+  std::cout<<s<<"\n";
   AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("udp-echo.tr"));
-  csma.EnablePcapAll ("udp-echo", false);
+  csma.EnableAsciiAll (ascii.CreateFileStream (t));
+  csma.EnablePcapAll (s, false);
 
 //
 // Now, do the actual simulation.
@@ -189,4 +198,14 @@ main (int argc, char *argv[])
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
+  return 0;
+}
+
+int main(int argc, char *argv[])
+{
+  for (int i = 0; i < 10; ++i)
+  {
+    networks(argc,argv,i);
+  }
+  return 0;
 }
