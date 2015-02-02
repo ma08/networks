@@ -21,8 +21,10 @@ def calcSD(arr):
   for x in arr:
     avg+=x
   avg=avg/len(arr)
+
   for x in arr:
     sd+=(x-avg)**2
+
   #print(sd)
   sd=sd/len(arr)
   sd=sd**0.5
@@ -104,8 +106,8 @@ throughput_fin=calcSD(throughput)
 print "avg",throughput_fin[0],
 print "sd",throughput_fin[1],
 forward_delay_fin=calcSD(forward_delay)
-print "avg",forward_delay[0],
-print "sd",forward_delay[1],
+print "avg",forward_delay_fin[0],
+print "sd",forward_delay_fin[1],
 jitter_fin=calcSD(jitter)
 print "avg",jitter_fin[0],
 print "sd",jitter_fin[1],
