@@ -1,6 +1,6 @@
 set title "Throughput VS Data Generation Rate"
 set xlabel "Kbps"
-set ylabel "Throughput"
+set ylabel "Throughput(Bps)"
 set grid
 plot "Throughput.data" with yerrorbars, \
 '' with linespoints

@@ -12,7 +12,7 @@ params=os.path.basename(path_name).split("-")[2:-1]
 interval=float(params[0])
 packetSize=float(params[1])/1024
 dataGenerationRate=(1/interval)*(packetSize)
-print "%6.5f"%interval,"s,","%3.1f"%packetSize,"KB,","%4.0f"%dataGenerationRate, "KBps",
+print "%6.5f"%interval,"s,","%3.1f"%packetSize,"Kb,","%4.0f"%dataGenerationRate, "Kbps",
 
 
 def calcSD(arr):
