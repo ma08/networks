@@ -1,0 +1,10 @@
+set title "Forwarding Delay VS Data Generation Rate"
+set xlabel "Kbps"
+set ylabel "Forwarding Delay (secs)"
+set grid
+plot "Forwarding.data" with yerrorbars, \
+'' with linespoints
+set term png
+set output "Forwarding.png"
+replot
+
