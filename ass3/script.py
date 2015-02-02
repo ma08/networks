@@ -50,7 +50,10 @@ for u in range(0,10):
   
   #print(dic)
 
-  f = open(path_name+"/"+os.path.basename(path_name)+"-"+str(u)+".tr")
+  try:
+    f = open(path_name+"/"+os.path.basename(path_name)+"-"+str(u)+".tr")
+  except IOError:
+    continue;
   for line in f.readlines():
     if("UdpHeader" in line):
       lsplt=line.split(" ")
