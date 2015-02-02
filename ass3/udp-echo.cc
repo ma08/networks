@@ -31,7 +31,7 @@
 #include "ns3/csma-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/internet-module.h"
-#include <rng-seed-manager.h>
+#include "ns3/rng-seed-manager.h"
 #include<time.h>
 
 using namespace ns3;
@@ -55,7 +55,8 @@ main (int argc, char *argv[])
 // run-time, via command-line arguments
 //
 //
-  RngSeedManger::SetSeed((unsigned int)time(NULL));
+
+  RngSeedManager::SetSeed((unsigned int)time(NULL));
   CommandLine cmd;
   bool useV6 = false;
   Address serverAddress_6,serverAddress_3,serverAddress_4,serverAddress_5;
