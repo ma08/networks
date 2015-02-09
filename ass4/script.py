@@ -13,7 +13,7 @@ params=os.path.basename(path_name).split("-")[2:-1]
 interval=float(params[0])
 packetSize=float(params[1])/1024
 dataGenerationRate=(1/interval)*(packetSize)
-#print "%6.5f"%interval,"s,","%3.1f"%packetSize,"Kb,","%4.0f"%dataGenerationRate, "Kbps",
+print "%6.5f"%interval,"s,","%3.1f"%packetSize,"Kb,","%4.0f"%dataGenerationRate, "Kbps",
 
 
 def calcSD(arr):
@@ -110,16 +110,33 @@ for u in range(0,10):
   jitter.append(np.std(delays))
   #print(u, rBytes/time,q_delay/packets,max_delay-min_delay)
 #jitter=[2,6,10]
+s_p="\n"+str(dataGenerationRate)+" "
+
+f1 = open("Throughput.data", "a")
+f2 = open("Forwarding.data", "a")
+f3 = open("Jitter.data", "a")
+
+
+f1.write(s_p);
+f2.write(s_p);
+f3.write(s_p);
+
 
 throughput_fin=calcSD(throughput)
 print "avg",throughput_fin[0],
 print "sd",throughput_fin[1],
+
+f1.write(str(throughput_fin[0])+" "+str(throughput_fin[1]))
+
 forward_delay_fin=calcSD(forward_delay)
 print "avg",forward_delay_fin[0],
 print "sd",forward_delay_fin[1],
+
+f2.write(str(forward_delay_fin[0])+" "+str(forward_delay_fin[1]))
 jitter_fin=calcSD(jitter)
 print "avg",jitter_fin[0],
 print "sd",jitter_fin[1],
+f3.write(str(jitter_fin[0])+" "+str(jitter_fin[1]))
 
 
 

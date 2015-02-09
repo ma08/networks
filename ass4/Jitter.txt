@@ -1,0 +1,10 @@
+set title "Jitter VS Data Generation Rate"
+set xlabel "Kbps"
+set ylabel "Jitter (secs)"
+set grid
+plot "Jitter.data" with yerrorbars, \
+'' with linespoints
+set term png
+set output "Jitter.png"
+replot
+
