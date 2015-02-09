@@ -39,6 +39,7 @@ for u in range(0,10):
   time =0
   lasttime=0
   rBytes=0
+  deqBytes=0
   dic={}
   ind=['6','8','10','12']
   for x in ind:
@@ -65,6 +66,8 @@ for u in range(0,10):
         dic[str(added)]['enq'].append(lsplt)
       elif(line[0] == '-'):
         dic[str(added)]['deq'].append(lsplt)
+        out=dic[str(added)]['deq'][-1][39].split(":")
+        deqBytes+=int(out[1][0:-1])-int(out[0][1:])
         #tBytes+=int((deq[-1][38])[6:-1])
         #if(deq[-1][2][10]=="0"):
           #str0+=int((deq[-1][38])[6:-1])
