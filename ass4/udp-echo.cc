@@ -64,7 +64,7 @@ int networks(int argc, char *argv[],int runno)
   Address serverAddress_6,serverAddress_3,serverAddress_4,serverAddress_5;
   uint32_t packetSize = atoi(argv[3]);
   uint32_t maxPacketCount=atoi(argv[1]);
-  Time interPacketInterval = Seconds( atof(argv[2]));
+  Time interPacketInterval = Seconds(atof(argv[2]));
 
   cmd.AddValue("maxPacketCount", "maxPackets",maxPacketCount);
   cmd.AddValue("interPacketInterval", "Interval",interPacketInterval);
@@ -189,7 +189,7 @@ int networks(int argc, char *argv[],int runno)
   std::cout<<s<<"\n";
   AsciiTraceHelper ascii;
   csma.EnableAsciiAll (ascii.CreateFileStream (t));
-  csma.EnablePcapAll (s, false);
+  //csma.EnablePcapAll (s, false);
 
 //
 // Now, do the actual simulation.
@@ -203,9 +203,47 @@ int networks(int argc, char *argv[],int runno)
 
 int main(int argc, char *argv[])
 {
-  for (int i = 0; i < 10; ++i)
+  for (int i = 0; i < 7; ++i)
   {
-    networks(argc,argv,i);
-  }
+   if(i==0){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.5");
+    strcpy(argv[3],"8192");
+   }
+   if(i==1){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.5");
+    strcpy(argv[3],"16384");
+   } 
+   if(i==2){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.5");
+    strcpy(argv[3],"32768");
+   } 
+   if(i==3){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.25");
+    strcpy(argv[3],"32768");
+   } 
+   if(i==4){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.125");
+    strcpy(argv[3],"32768");
+   } 
+   if(i==5){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.0625");
+    strcpy(argv[3],"32768");
+   } 
+   if(i==6){
+    strcpy(argv[1],"1000");
+    strcpy(argv[2],"0.03125");
+    strcpy(argv[3],"32768");
+   }
+   for (int j = 0; j < 10; ++j)
+    {
+      networks(argc,argv,j);
+    }
+}
   return 0;
 }
