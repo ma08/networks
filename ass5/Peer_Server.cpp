@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <string.h>
@@ -26,24 +27,31 @@ void handle_socket(int sock){
   int nread;
   char buffer[256];
   bzero(buffer,256);
-  n = read(sock,buffer,255);
+  n = read(sock,buffer,50);
+  /*printf("\n\n%s---",buffer);*/
+  //return;
   int f;
   if (n < 0) perror("ERROR reading from socket");
   printf("\n\n%s\n\n",buffer);
   if(buffer[0]=='R'&&buffer[1]=='E'){
-    if((f=open(buffer+8,O_RDONLY))<0){
+    if((f=open(buffer+8,O_RDONLY))>=0){
       strcpy(buffer,"SUCCESS");
+      /*printf("\n\n%s",buffer);*/
+      fflush(stdout);
       n = write(sock,buffer,20);
-      while((nread = read(f, buffer, 32))>0){
-        printf("\n\n%s",buffer);
+      if (n < 0) perror("ERROR writing to socket");
+      while((nread = read(f, buffer, CHUNKSIZE))>0){
+        /*printf("\n\n%s",buffer);*/
         fflush(stdout);
-        n = write(sock,buffer,20);
+        n = write(sock,buffer,nread);
         if(n<0)
           perror("Can't write");
       }
-      if (n < 0) perror("ERROR writing to socket");
+      printf("\nSuccesfully Uploaded");
     }else{
       strcpy(buffer,"FAIL");
+      printf("\n\n%s",buffer);
+      fflush(stdout);
       n = write(sock,buffer,20);
       if (n < 0) perror("ERROR writing to socket");
     }
@@ -61,8 +69,9 @@ int main(int argc, char *argv[]) {
   int nbytes;
   char buffer[MAXSIZE];
   char buffer_2[MAXSIZE];
+  char buffer_3[MAXSIZE];
   struct hostent *server;
-  struct sockaddr_in serv_addr;
+  struct sockaddr_in serv_addr,serv_addr_stream;
   if(argc<3){
     printf("Please specify address and port");
     exit(1);
@@ -91,6 +100,20 @@ int main(int argc, char *argv[]) {
     strcpy(buffer_2,buffer);
   }
   strcpy(buffer,"SHARE ");
+  int sockfd_stream = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd_stream < 0) 
+    perror("ERROR opening socket");
+  bzero((char *) &serv_addr_stream, sizeof(serv_addr_stream));
+  serv_addr_stream.sin_family = AF_INET;
+  serv_addr_stream.sin_addr.s_addr = INADDR_ANY;
+  serv_addr_stream.sin_port = htons(server_here_port);
+  while (bind(sockfd_stream, (struct sockaddr *) &serv_addr_stream, sizeof(serv_addr_stream)) < 0) {
+    perror("ERROR on binding");
+    server_here_port=rand()%5001+100001;
+    serv_addr_stream.sin_port = htons(server_here_port);
+  }
+  sprintf(buffer_3,"%d ",server_here_port);
+  strcat(buffer,buffer_3);
   strcat(buffer,buffer_2);
   //printf("\n %s",buffer);
   if((nbytes = sendto(sockfd, buffer, MAXSIZE, 0, (struct sockaddr *) & serv_addr, len))<0){
@@ -102,23 +125,13 @@ int main(int argc, char *argv[]) {
   }
   printf("\nGot ack: %s\n",buffer_2);
 
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) 
-    perror("ERROR opening socket");
-  bzero((char *) &serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = htons(server_here_port);
-  if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
-    perror("ERROR on binding");
-   listen(sockfd,5);
+  
+   listen(sockfd_stream,5);
    /*perror("woo");*/
    clilen = sizeof(cli_addr);
    while (1) {
-     printf("ccccc");
      fflush(stdout);
-     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-     printf("aaaaaaaaaaa");
+     newsockfd = accept(sockfd_stream, (struct sockaddr *) &cli_addr, &clilen);
      fflush(stdout);
      if (newsockfd < 0) 
        perror("ERROR on accept");
@@ -127,8 +140,7 @@ int main(int argc, char *argv[]) {
      if (pid < 0)
        perror("ERROR on fork");
      if (pid == 0)  {
-       close(sockfd);
-       printf("bbbbbbb");
+       close(sockfd_stream);
        fflush(stdout);
        handle_socket(newsockfd);
        exit(0);

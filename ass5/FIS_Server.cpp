@@ -78,14 +78,15 @@ int main(int argc, char *argv[])
     inet_ntop(AF_INET, &(client_addr.sin_addr), buffer_2, len);
     printf("\nMESSAGE RECEIVED: %s",message);
     printf("\n\taddress:%s",buffer_2);
-    printf("\n\tport:%d\n",ntohs((client_addr.sin_port)));
+    /*printf("\n\tport:%d\n",ntohs((client_addr.sin_port)));*/
     fflush(stdout);
     if(message[0]=='S'&&message[1]=='H'){
       printf("\nNew peer connected to share stuff\n");
       fflush(stdout);
-      address_pair foo=make_pair(string(buffer_2),ntohs(client_addr.sin_port));
       file_info::iterator it=files_to_ip.begin();
-      token=strtok(message+6,"\n");
+      token=strtok(message+6," ");
+      address_pair foo=make_pair(string(buffer_2),atoi(token));
+      token=strtok(NULL,"\n");
       if(token==NULL){
         exit(1);
       }
