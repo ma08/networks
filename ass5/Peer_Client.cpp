@@ -44,7 +44,9 @@ int main(int argc, char *argv[]) {
   serv_addr.sin_port = htons(portno);
   len=sizeof(serv_addr);
   printf("Enter filename: ");
-  scanf("%s",buffer);
+  scanf("%s",buffer_2);
+  strcpy(buffer,"REQUEST ");
+  strcat(buffer,buffer_2);
   if((nbytes = sendto(sockfd, buffer, MAXSIZE, 0, (struct sockaddr *) & serv_addr, len))<0){
     perror("Can't send");
   }

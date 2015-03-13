@@ -50,8 +50,9 @@ int main(int argc, char *argv[])
   char *token;
   struct sockaddr_in serv_addr;
   struct sockaddr_in client_addr;
-  int len=20;
+  int len=100;
   char buffer_2[len];
+  char buffer_3[len];
   if(argc>1){
     server_port=atoi(argv[1]);
   }else{
@@ -116,12 +117,26 @@ int main(int argc, char *argv[])
         }
       }
       print_file_info(files_to_ip);
+      strcpy(buffer,"Message Received");
     }else if(message[0]=='R'&&message[1]=='E'){
       s=string(message+8);
-      cout<<s;
-      
+      //cout<<s;
+      file_info::iterator it=files_to_ip.begin();
+      it=files_to_ip.find(s);
+      if(it!=files_to_ip.end()){
+        address_pair bar=it->second.at(it->second.size()-1);
+        strcpy(buffer,"SUCCESS ");
+        strcpy(buffer_2,bar.first.c_str());
+        strcat(buffer_2," ");
+        sprintf(buffer_3,"%d",bar.second);
+        strcat(buffer_2,buffer_3);
+        strcat(buffer,buffer_2);
+      }else{
+        strcpy(buffer,"FAIL");
+      }
     }
-    strcpy(buffer,"Message Received");
+    fflush(stdout);
+    /*strcpy(buffer,"Message Received");*/
     nbytes = sendto(sockfd, buffer, MAXSIZE, 0, (struct sockaddr *) & client_addr, clilen);
     if (nbytes < 0){
       perror ("sendto (server)");

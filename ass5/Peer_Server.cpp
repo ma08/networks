@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h> 
@@ -17,11 +18,37 @@
 #define MAXSIZE 100
 
 #define MAXSIZE 100
+#define CHUNKSIZE 32
 
 using namespace std;
+void handle_socket(int sock){
+  int n;
+  char buffer[256];
+  bzero(buffer,256);
+  n = read(sock,buffer,255);
+  int f;
+  if (n < 0) perror("ERROR reading from socket");
+  printf("\n\n%s\n\n",buffer);
+  if(buffer[0]=='R'&&buffer[1]=='E'){
+    if((f=open(buffer+8,O_RDONLY))<0){
+      strcpy(buffer,"SUCCESS");
+      n = write(sock,buffer,20);
+      if (n < 0) perror("ERROR writing to socket");
+    }else{
+      strcpy(buffer,"FAIL");
+      n = write(sock,buffer,20);
+      if (n < 0) perror("ERROR writing to socket");
+    }
+  }
+
+}
 int main(int argc, char *argv[]) {
-  int sockfd,portno;
+  int sockfd,newsockfd,portno;
+  int server_here_port=50000;
   int num_files;
+  pid_t pid;
+  socklen_t clilen;
+  struct sockaddr_in cli_addr;
   socklen_t len;
   int nbytes;
   char buffer[MAXSIZE];
@@ -62,7 +89,36 @@ int main(int argc, char *argv[]) {
     perror("Can't send");
   }
   nbytes = recvfrom (sockfd, buffer_2, MAXSIZE, 0, (struct sockaddr *) & serv_addr, &len);
-  printf("Got ack: %s",buffer_2);
+  if(nbytes<0){
+    perror("no Ack");
+  }
+  printf("\nGot ack: %s\n",buffer_2);
 
+  /*sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0) 
+    perror("ERROR opening socket");
+  bzero((char *) &serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_addr.s_addr = INADDR_ANY;
+  serv_addr.sin_port = htons(server_here_port);
+  if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
+    perror("ERROR on binding");
+   listen(sockfd,5);
+   clilen = sizeof(cli_addr);
+   while (1) {
+     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+     if (newsockfd < 0) 
+       perror("ERROR on accept");
+     pid = fork();
+     if (pid < 0)
+       perror("ERROR on fork");
+     if (pid == 0)  {
+       close(sockfd);
+       handle_socket(newsockfd);
+       exit(0);
+     }else
+       close(newsockfd);
+   } [> end of while <]
+   close(sockfd);*/
 }
 
