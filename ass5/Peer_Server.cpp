@@ -23,6 +23,7 @@
 using namespace std;
 void handle_socket(int sock){
   int n;
+  int nread;
   char buffer[256];
   bzero(buffer,256);
   n = read(sock,buffer,255);
@@ -33,6 +34,13 @@ void handle_socket(int sock){
     if((f=open(buffer+8,O_RDONLY))<0){
       strcpy(buffer,"SUCCESS");
       n = write(sock,buffer,20);
+      while((nread = read(f, buffer, 32))>0){
+        printf("\n\n%s",buffer);
+        fflush(stdout);
+        n = write(sock,buffer,20);
+        if(n<0)
+          perror("Can't write");
+      }
       if (n < 0) perror("ERROR writing to socket");
     }else{
       strcpy(buffer,"FAIL");
@@ -40,11 +48,11 @@ void handle_socket(int sock){
       if (n < 0) perror("ERROR writing to socket");
     }
   }
-
+  close(sock);
 }
 int main(int argc, char *argv[]) {
   int sockfd,newsockfd,portno;
-  int server_here_port=50000;
+  int server_here_port=10011;
   int num_files;
   pid_t pid;
   socklen_t clilen;
@@ -94,7 +102,7 @@ int main(int argc, char *argv[]) {
   }
   printf("\nGot ack: %s\n",buffer_2);
 
-  /*sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) 
     perror("ERROR opening socket");
   bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -104,21 +112,29 @@ int main(int argc, char *argv[]) {
   if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
     perror("ERROR on binding");
    listen(sockfd,5);
+   /*perror("woo");*/
    clilen = sizeof(cli_addr);
    while (1) {
+     printf("ccccc");
+     fflush(stdout);
      newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+     printf("aaaaaaaaaaa");
+     fflush(stdout);
      if (newsockfd < 0) 
        perror("ERROR on accept");
+     fflush(stdout);
      pid = fork();
      if (pid < 0)
        perror("ERROR on fork");
      if (pid == 0)  {
        close(sockfd);
+       printf("bbbbbbb");
+       fflush(stdout);
        handle_socket(newsockfd);
        exit(0);
      }else
        close(newsockfd);
-   } [> end of while <]
-   close(sockfd);*/
+   } /* end of while */
+   close(sockfd);
 }
 
