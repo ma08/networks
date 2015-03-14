@@ -94,10 +94,10 @@ int main(int argc, char *argv[]) {
   scanf("%d",&num_files);
   buffer_2[0]='\0';
   while(num_files--){
+    strcat(buffer_2,"\n");
     printf("Enter file name: ");
     scanf("%s",buffer);
-    strcpy(buffer_2,"\n");
-    strcpy(buffer_2,buffer);
+    strcat(buffer_2,buffer);
   }
   strcpy(buffer,"SHARE ");
   int sockfd_stream = socket(AF_INET, SOCK_STREAM, 0);
@@ -108,10 +108,11 @@ int main(int argc, char *argv[]) {
   serv_addr_stream.sin_addr.s_addr = INADDR_ANY;
   serv_addr_stream.sin_port = htons(server_here_port);
   while (bind(sockfd_stream, (struct sockaddr *) &serv_addr_stream, sizeof(serv_addr_stream)) < 0) {
-    perror("ERROR on binding");
+    printf("\nERROR on binding to %d",server_here_port);
     server_here_port=rand()%5001+100001;
     serv_addr_stream.sin_port = htons(server_here_port);
   }
+  printf("\nUsing port %d for socket stream",server_here_port);
   sprintf(buffer_3,"%d ",server_here_port);
   strcat(buffer,buffer_3);
   strcat(buffer,buffer_2);
