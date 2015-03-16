@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <fcntl.h>
-#include<errno.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -23,28 +23,26 @@ using namespace std;
 
 int dostuff()
 {
-    int sockfd_stream, portno_stream, n;
+    int sockfd_stream,portno_stream,n;
     struct sockaddr_in serv_addr_stream;
     struct hostent *server_stream;
-
     char buffer_stream[256];
-    portno_stream = 10011;
-    sockfd_stream = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd_stream < 0) 
+    portno_stream=10011;
+    sockfd_stream=socket(AF_INET,SOCK_STREAM,0);
+    if(sockfd_stream <0)
         perror("ERROR opening socket");
-    server_stream = gethostbyname("localhost");
-    if (server_stream == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
+    server_stream=gethostbyname("localhost");
+    if(server_stream==NULL){
+        fprintf(stderr,"\nERROR, no such host\n");
         exit(0);
     }
-    bzero((char *) &serv_addr_stream, sizeof(serv_addr_stream));
-    serv_addr_stream.sin_family = AF_INET;
-    bcopy((char *)server_stream->h_addr, (char *)&serv_addr_stream.sin_addr.s_addr, server_stream->h_length);
-    serv_addr_stream.sin_port = htons(portno_stream);
-    while (connect(sockfd_stream,(struct sockaddr *) &serv_addr_stream,sizeof(serv_addr_stream)) < 0) 
+    bzero((char*)&serv_addr_stream,sizeof(serv_addr_stream));
+    serv_addr_stream.sin_family=AF_INET;
+    bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
+    serv_addr_stream.sin_port=htons(portno_stream);
+    while(connect(sockfd_stream,(struct sockaddr*)&serv_addr_stream,sizeof(serv_addr_stream))<0)
       ;
     return 0;
-        /*printf("ERROR connecting");*/
 }
  
 int main(int argc, char *argv[]) {
@@ -58,22 +56,22 @@ int main(int argc, char *argv[]) {
   struct hostent *server;
   struct sockaddr_in serv_addr;
   if(argc<3){
-    printf("Please specify address and port");
+    printf("\nPlease specify address and port\n");
     exit(1);
   }
-  portno = atoi(argv[2]);
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sockfd < 0) 
+  portno=atoi(argv[2]);
+  sockfd=socket(AF_INET,SOCK_DGRAM,0);
+  if(sockfd<0)
     perror("ERROR opening socket");
-  server = gethostbyname(argv[1]);
-  if (server == NULL) {
+  server=gethostbyname(argv[1]);
+  if(server==NULL){
     printf("ERROR, no such host\n");
     exit(0);
   }
-  bzero((char *) &serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-  serv_addr.sin_port = htons(portno);
+  bzero((char*)&serv_addr,sizeof(serv_addr));
+  serv_addr.sin_family=AF_INET;
+  bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
+  serv_addr.sin_port=htons(portno);
   len=sizeof(serv_addr);
   while(1){
     printf("\nEnter filename to download: ");
@@ -81,84 +79,50 @@ int main(int argc, char *argv[]) {
     strcpy(buffer,"REQUEST ");
     strcat(buffer,buffer_2);
     strcpy(buffer_3,buffer);
-    if((nbytes = sendto(sockfd, buffer, MAXSIZE, 0, (struct sockaddr *) & serv_addr, len))<0){
+    if((nbytes=sendto(sockfd,buffer,MAXSIZE,0,(struct sockaddr*)&serv_addr,len))<0){
       perror("Can't send");
     }
-    nbytes = recvfrom (sockfd, buffer_2, MAXSIZE, 0, (struct sockaddr *) & serv_addr, &len);
-    printf("Got ack: %s\n",buffer_2);
+    nbytes=recvfrom(sockfd,buffer_2,MAXSIZE,0,(struct sockaddr*)&serv_addr,&len);
+   printf("\nGot ack: %s\n",buffer_2);
     if(nbytes>0){
       if(buffer_2[0]=='F'&&buffer_2[1]=='A'){
-        printf("\n File not available");
+        printf("\n File not available\n");
       }
       else{
         token=strtok(buffer_2+8," ");
-        /*printf("\n%s---",token);*/
         int sockfd_stream, portno_stream, n;
         struct sockaddr_in serv_addr_stream;
         struct hostent *server_stream;
 
         char buffer_stream[256];
-        portno_stream = 10011;
-        sockfd_stream = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd_stream < 0) 
+        portno_stream=10011;
+        sockfd_stream=socket(AF_INET, SOCK_STREAM, 0);
+        if(sockfd_stream<0) 
             perror("ERROR opening socket");
-        server_stream = gethostbyname(token);
-        if (server_stream == NULL) {
-            fprintf(stderr,"ERROR, no such host\n");
+        server_stream=gethostbyname(token);
+        token=strtok(NULL," ");
+        portno_stream=atoi(token);
+        if(server_stream==NULL) {
+            fprintf(stderr,"\nERROR, no such host\n");
             exit(0);
         }
-        bzero((char *) &serv_addr_stream, sizeof(serv_addr_stream));
-        serv_addr_stream.sin_family = AF_INET;
-        bcopy((char *)server_stream->h_addr, (char *)&serv_addr_stream.sin_addr.s_addr, server_stream->h_length);
-        serv_addr_stream.sin_port = htons(portno_stream);
-        while (connect(sockfd_stream,(struct sockaddr *) &serv_addr_stream,sizeof(serv_addr_stream)) < 0) 
+        bzero((char*)&serv_addr_stream,sizeof(serv_addr_stream));
+        serv_addr_stream.sin_family=AF_INET;
+        bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
+        serv_addr_stream.sin_port=htons(portno_stream);
+        while(connect(sockfd_stream,(struct sockaddr*)&serv_addr_stream,sizeof(serv_addr_stream))<0) 
         ;
-        /*printf("\n\n%s",buffer_3);*/
         nbytes=write(sockfd_stream,buffer_3,strlen(buffer_3));
         if(nbytes<0){
           perror("writing: ");
-          printf("damn");
         }
-        /*dostuff();*/
-        /*token=strtok(buffer_2+8," ");
-        printf("\n%s---",token);
-        server = gethostbyname("localhost");
-        if (server == NULL) {
-          printf("ERROR, no such host\n");
-          exit(0);
-        }
-        bzero((char *) &serv_addr, sizeof(serv_addr));
-        bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-        serv_addr.sin_port = htons(10011);
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) 
-          perror("ERROR opening socket");
-        while (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
-          printf("ERROR connecting");
-          fflush(stdout);
-        }
-        bzero(buffer,256);
-        perror("");
-        printf("\n\nAAA");
         fflush(stdout);
-        [>nbytes=write(sockfd,buffer_3,strlen(buffer_3));<]
-        printf("\n\nDDD");
-        fflush(stdout);
-        [>if(nbytes<0){
-          perror("Can't write");
-        }<]*/
-        /*printf("%s",buffer);*/
-        fflush(stdout);
-        nbytes = read(sockfd_stream,buffer,20);
+        nbytes=read(sockfd_stream,buffer,20);
         fflush(stdout);
         if(nbytes<0){
-          printf("\n\nBBB");
           perror("Can't read");
-          /*continue;*/
         }
-        /*printf("\n\n%s",buffer_3);*/
         if(strcmp(buffer,"SUCCESS")==0){
-          /*printf("\n\nSuccess");*/
           fflush(stdout);
           char *filename=basename(buffer_3+8);
           int nwritten,nread;
@@ -168,46 +132,40 @@ int main(int argc, char *argv[]) {
             strcat(buffer_3,"/");
           }
           strcat(buffer_3,filename);
-          printf("\n\n%s",buffer_3);
-
-          int fd_to = open(buffer_3, O_WRONLY | O_CREAT , 0666);
-          if (fd_to < 0){
+          printf("\n\n%s\n",buffer_3);
+          int fd_to=open(buffer_3,O_WRONLY|O_CREAT,0666);
+          if(fd_to<0){
             perror("Can't write/create");
-          }else{
+          }
+          else{
             int i;
-            while (nbytes = read(sockfd_stream, buffer,CHUNKSIZE ), nbytes > 0){
-              /*for (i = 0; i < nbytes; ++i)
-              {
-                printf("%c",buffer[i]);
-                
-              }*/
+            while(nbytes=read(sockfd_stream,buffer,CHUNKSIZE),nbytes>0){
               fflush(stdout);
-              char *out_ptr = buffer;
-              do {
-                nwritten = write(fd_to, out_ptr, nbytes);
-                if (nwritten >= 0)
+              char *out_ptr=buffer;
+              do{
+                nwritten=write(fd_to,out_ptr,nbytes);
+                if(nwritten>=0)
                 {
-                  nbytes -= nwritten;
-                  out_ptr += nwritten;
+                  nbytes-=nwritten;
+                  out_ptr+=nwritten;
                 }
-                else if (errno != EINTR)
+                else if(errno!=EINTR)
                 {
-                  /*close(fd_from);*/
-                  if (fd_to >= 0)
+                  if(fd_to>=0)
                     close(fd_to);
                   return -1;
                 }
-              } while (nbytes > 0);
+              } while(nbytes>0);
             }
             close(sockfd_stream);
             close(fd_to);
-            printf("\nFile successfully downloaded");
+            printf("\nFile successfully downloaded\n");
           }
-        }else{
-          printf("\nCan't read");
+        }
+        else{
+          printf("\nCan't read\n");
         }
       }
     }
   }
 }
-
