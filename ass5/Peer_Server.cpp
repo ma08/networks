@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <string.h>
+#include<signal.h>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -20,8 +23,14 @@
 
 #define MAXSIZE 100
 #define CHUNKSIZE 32
-
 using namespace std;
+
+void SigCatcher(int n)
+{
+    pid_t kidpid = waitpid(-1, NULL, WNOHANG);
+    printf("Child %d terminated\n", kidpid);
+}
+
 void handle_socket(int sock){
   int n;
   int nread;
@@ -145,8 +154,10 @@ int main(int argc, char *argv[]) {
        fflush(stdout);
        handle_socket(newsockfd);
        exit(0);
-     }else
-       close(newsockfd);
+     }else{
+        signal(SIGCHLD,SigCatcher);
+        close(newsockfd);
+     }
    } /* end of while */
    close(sockfd);
 }

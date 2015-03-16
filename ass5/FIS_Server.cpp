@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     inet_ntop(AF_INET, &(client_addr.sin_addr), buffer_2, len);
     printf("\nMESSAGE RECEIVED: %s",message);
     printf("\n\taddress:%s",buffer_2);
-    /*printf("\n\tport:%d\n",ntohs((client_addr.sin_port)));*/
+    printf("\n\tDatagram port:%d\n",ntohs((client_addr.sin_port)));
     fflush(stdout);
     if(message[0]=='S'&&message[1]=='H'){
       printf("\nNew peer connected to share stuff\n");
