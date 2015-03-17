@@ -93,7 +93,6 @@ int main(int argc, char *argv[]) {
         int sockfd_stream, portno_stream, n;
         struct sockaddr_in serv_addr_stream;
         struct hostent *server_stream;
-
         char buffer_stream[256];
         portno_stream=10011;
         sockfd_stream=socket(AF_INET, SOCK_STREAM, 0);
@@ -111,7 +110,7 @@ int main(int argc, char *argv[]) {
         bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
         serv_addr_stream.sin_port=htons(portno_stream);
         while(connect(sockfd_stream,(struct sockaddr*)&serv_addr_stream,sizeof(serv_addr_stream))<0) 
-        ;
+          ;
         nbytes=write(sockfd_stream,buffer_3,strlen(buffer_3));
         if(nbytes<0){
           perror("writing: ");
@@ -166,6 +165,8 @@ int main(int argc, char *argv[]) {
           printf("\nCan't read\n");
         }
       }
+    }else{
+      printf("\nCan't get response from FIS server");
     }
   }
 }

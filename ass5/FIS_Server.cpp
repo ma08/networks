@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
       fflush(stdout);
       file_info::iterator it=files_to_ip.begin();
       token=strtok(message+6," ");
-      address_pair foo=make_pair(string(buffer_2),atoi(token));
+      address_pair incoming_address_pair=make_pair(string(buffer_2),atoi(token));
       token=strtok(NULL,"\n");
       if(token==NULL){
         exit(1);
@@ -88,12 +88,12 @@ int main(int argc, char *argv[])
       s=string(token);
       it=files_to_ip.find(s);
       if(it!=files_to_ip.end()){
-        it->second.push_back(foo);
+        it->second.push_back(incoming_address_pair);
       }
       else{
         file_info::iterator it=files_to_ip.begin();
         vector<address_pair> x;
-        x.push_back(foo);
+        x.push_back(incoming_address_pair);
         pair<string,vector<address_pair> > bar=make_pair(s,x);
         it=files_to_ip.insert(it,bar);
       }
@@ -101,12 +101,12 @@ int main(int argc, char *argv[])
         s=string(token);
         it=files_to_ip.find(s);
         if(it!=files_to_ip.end()){
-          it->second.push_back(foo);
+          it->second.push_back(incoming_address_pair);
         }
         else{
           it=files_to_ip.begin();
           vector<address_pair> x;
-          x.push_back(foo);
+          x.push_back(incoming_address_pair);
           pair<string,vector<address_pair> > bar=make_pair(s,x);
           it=files_to_ip.insert(it,bar);
         }

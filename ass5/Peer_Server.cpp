@@ -125,8 +125,8 @@ int main(int argc, char *argv[]) {
   nbytes=recvfrom(sockfd,buffer_2,MAXSIZE,0,(struct sockaddr*)&serv_addr,&len);
   if(nbytes<0){
     perror("no Ack");
-  }
-  printf("\nGot ack: %s\n",buffer_2);
+  }else
+    printf("\nGot ack: %s\n",buffer_2);
   listen(sockfd_stream,5);
   clilen=sizeof(cli_addr);
   while(1){
@@ -135,19 +135,21 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
     if(newsockfd<0) 
       perror("ERROR on accept");
-    fflush(stdout);
-    pid=fork();
-    if(pid<0)
-      perror("ERROR on fork");
-    if(pid==0){
-      close(sockfd_stream);
-      fflush(stdout);
-      handle_socket(newsockfd);
-      exit(0);
-     }
     else{
-      signal(SIGCHLD,SigCatcher);
-      close(newsockfd);
+      fflush(stdout);
+      pid=fork();
+      if(pid<0)
+        perror("ERROR on fork");
+      if(pid==0){
+        close(sockfd_stream);
+        fflush(stdout);
+        handle_socket(newsockfd);
+        exit(0);
+       }
+      else{
+        signal(SIGCHLD,SigCatcher);
+        close(newsockfd);
+      }
     }
   } 
   close(sockfd);
