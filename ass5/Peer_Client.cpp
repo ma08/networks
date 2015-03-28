@@ -21,30 +21,6 @@
 
 using namespace std;
 
-int dostuff()
-{
-    int sockfd_stream,portno_stream,n;
-    struct sockaddr_in serv_addr_stream;
-    struct hostent *server_stream;
-    char buffer_stream[256];
-    portno_stream=10011;
-    sockfd_stream=socket(AF_INET,SOCK_STREAM,0);
-    if(sockfd_stream <0)
-        perror("ERROR opening socket");
-    server_stream=gethostbyname("localhost");
-    if(server_stream==NULL){
-        fprintf(stderr,"\nERROR, no such host\n");
-        exit(0);
-    }
-    bzero((char*)&serv_addr_stream,sizeof(serv_addr_stream));
-    serv_addr_stream.sin_family=AF_INET;
-    bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
-    serv_addr_stream.sin_port=htons(portno_stream);
-    while(connect(sockfd_stream,(struct sockaddr*)&serv_addr_stream,sizeof(serv_addr_stream))<0)
-      ;
-    return 0;
-}
- 
 int main(int argc, char *argv[]) {
   int sockfd,portno;
   socklen_t len;
@@ -53,6 +29,7 @@ int main(int argc, char *argv[]) {
   char buffer[MAXSIZE];
   char buffer_2[MAXSIZE];
   char buffer_3[MAXSIZE];
+  char buffer_4[MAXSIZE];
   struct hostent *server;
   struct sockaddr_in serv_addr;
   if(argc<3){
@@ -79,6 +56,7 @@ int main(int argc, char *argv[]) {
     strcpy(buffer,"REQUEST ");
     strcat(buffer,buffer_2);
     strcpy(buffer_3,buffer);
+    strcpy(buffer_4,buffer_2);
     if((nbytes=sendto(sockfd,buffer,MAXSIZE,0,(struct sockaddr*)&serv_addr,len))<0){
       perror("Can't send");
     }
@@ -123,7 +101,7 @@ int main(int argc, char *argv[]) {
         }
         if(strcmp(buffer,"SUCCESS")==0){
           fflush(stdout);
-          char *filename=basename(buffer_3+8);
+          char *filename=basename(buffer_4);
           int nwritten,nread;
           printf("\nGive path to save the file:");
           scanf("%s",buffer_3);
@@ -170,3 +148,5 @@ int main(int argc, char *argv[]) {
     }
   }
 }
+
+

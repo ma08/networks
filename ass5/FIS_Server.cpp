@@ -83,7 +83,9 @@ int main(int argc, char *argv[])
       address_pair incoming_address_pair=make_pair(string(buffer_2),atoi(token));
       token=strtok(NULL,"\n");
       if(token==NULL){
-        exit(1);
+        printf("\nWrong Format");
+        continue;
+        //exit(1);
       }
       s=string(token);
       it=files_to_ip.find(s);
