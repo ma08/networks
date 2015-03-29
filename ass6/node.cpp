@@ -157,6 +157,7 @@ public:
   address_hash_pair cur,pred,succ;
   Node *succ_point=NULL;
   Node *pred_point=NULL;
+  static address_pair origin;
   int node_is_end,node_is_start;
 
   int sendToAdr(string s, int sockfd,address_pair x){
@@ -197,70 +198,46 @@ public:
     return nbytes;
   }
 
-  address_pair find(string s,int sockfd){
-      unsigned long long hash=oat_hash(s.c_str(),s.length());
-      printf("\n\n---------%s-----%d--------",this->cur.first.first.c_str(),this->cur.first.second);
+  address_pair* find(string s,int sockfd){
+    unsigned long long hash=oat_hash(s.c_str(),s.length());
+    printf("\n\n---------%s-----%d--------",this->cur.first.first.c_str(),this->cur.first.second);
+    fflush(stdout);
+    
+    if(hash>cur.second){
+      if((this->succ.first.first.compare(this->origin.first)==0)&&this->succ.first.second==this->origin.second){
+        return NULL;
+      }
+      string re="FILE "+s;
+      this->sendToAdr(re,sockfd,this->succ.first);
+      re=recvDatagram(sockfd);
+      if(re[0]=='S'&&re[1]=='U'){
+        string y=re.substr(8);
+        int x=atoi(y.c_str());
+        return new address_pair(this->succ.first.first,x);
+      }
+      cout<<"\n\n----"<<re;
+      printf("\n\nQuerying---------%s-----%d--------",this->succ.first.first.c_str(),this->succ.first.second);
       fflush(stdout);
-      if(hash>cur.second){
-      /*if(1){*/
-        //query succ(start)
-        string re="FILE "+s;
-        this->sendToAdr(re,sockfd,this->succ.first);
-        re=recvDatagram(sockfd);
-        if(re[0]=='S'&&re[1]=='U'){
-          string y=re.substr(8);
-          int x=atoi(y.c_str());
-          return address_pair(this->succ.first.first,x);
-        }
-        cout<<"\n\n----"<<re;
-        printf("\n\nQuerying---------%s-----%d--------",this->succ.first.first.c_str(),this->succ.first.second);
-        fflush(stdout);
-        return this->successor(sockfd)->find(s,sockfd);
-        return succ.first;
-      }else{
-        //query pred
-        string re="FILE "+s;
-        this->sendToAdr(re,sockfd,this->pred.first);
-        re=recvDatagram(sockfd);
-        if(re[0]=='S'&&re[1]=='U'){
-          string y=re.substr(8);
-          int x=atoi(y.c_str());
-          return address_pair(this->pred.first.first,x);
-        }
-        cout<<"\n\n----"<<re;
-        printf("\n\nQuerying---------%s-----%d--------",this->pred.first.first.c_str(),this->pred.first.second);
-        fflush(stdout);
-        this->predecessor(sockfd);
-        return this->predecessor(sockfd)->find(s,sockfd);
+      return (this->successor(sockfd)->find(s,sockfd));
+    }else{
+      //query pred
+      if((this->pred.first.first.compare(this->origin.first)==0)&&this->pred.first.second==this->origin.second){
+        return NULL;
       }
-      /*if(node_is_end){
-        if(hash>cur.second){
-          //query succ(start)
-          return succ.first;
-        }else{
-          //query pred
-          return pred.first;
-        }
+      string re="FILE "+s;
+      this->sendToAdr(re,sockfd,this->pred.first);
+      re=recvDatagram(sockfd);
+      if(re[0]=='S'&&re[1]=='U'){
+        string y=re.substr(8);
+        int x=atoi(y.c_str());
+        return new address_pair(this->pred.first.first,x);
       }
-      [>
-      else if(node_is_start){
-        if(hash>node.cur.second){
-          //query succ
-        }else{
-          //trouble
-        }
-      }
-      <]
-      else{
-        if(hash>cur.second){
-          //query succ
-          return succ.first;
-          
-        }else{
-          //query pred
-          return succ.first;
-        }
-     }*/
+      cout<<"\n\n----"<<re;
+      printf("\n\nQuerying---------%s-----%d--------",this->pred.first.first.c_str(),this->pred.first.second);
+      fflush(stdout);
+      this->predecessor(sockfd);
+      return this->predecessor(sockfd)->find(s,sockfd);
+    }
   }
 
 private:
@@ -268,6 +245,8 @@ private:
   
   /* data */
 };
+
+address_pair Node::origin;
 
 
 
@@ -306,6 +285,7 @@ int main(int argc, char *argv[])
   }
   address_pair x =make_pair(string(argv[1]),server_port);
   Node node=Node(x,getHash(x));
+  Node::origin=node.cur.first;
   listen(sockfd,5);
   clilen=sizeof(client_addr);
   printf("\n------receiving--------");
@@ -384,11 +364,15 @@ int main(int argc, char *argv[])
           struct sockaddr_in serv_addr_stream;
           struct hostent *server_stream;
           int portno_stream;
-          address_pair x = node.find(s,sockfd);
-          portno_stream=x.second;
+          address_pair *x = node.find(s,sockfd);
+          if(x==NULL){
+            printf("\nFile not available in any node");
+            continue;
+          }
+          portno_stream=x->second;
           printf("\n\n I am here %d",portno_stream);
           fflush(stdout);
-          server_stream=gethostbyname(x.first.c_str());
+          server_stream=gethostbyname(x->first.c_str());
           bzero((char*)&serv_addr_stream,sizeof(serv_addr_stream));
           serv_addr_stream.sin_family=AF_INET;
           bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
