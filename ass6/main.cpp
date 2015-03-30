@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <error.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <algorithm>
 #include <netdb.h> 
@@ -21,6 +22,39 @@ typedef pair<address_pair, unsigned long long> address_hash_pair;
 
 bool customSort(const address_hash_pair& p1, const address_hash_pair& p2){
   return p1.second < p2.second;
+}
+  string host,result; 
+  vector<address_hash_pair> node_info;
+
+  int sockfd;
+void intHandler(int dummy=0) {
+  int i,portno;
+  int nbytes;
+  int len;
+  struct hostent *server;
+  struct sockaddr_in serv_addr;
+  char buff[100];
+  for (i = 0; i < node_info.size(); ++i)
+  {
+    address_hash_pair x = node_info.at(i);
+    server=gethostbyname(x.first.first.c_str());
+    sprintf(buff,"%d",x.first.second);
+    result=host+string(buff);
+    if(server==NULL){
+      printf("ERROR, no such host\n");
+      exit(0);
+    } 
+    portno=x.first.second;
+    serv_addr.sin_family=AF_INET;
+    bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
+    serv_addr.sin_port=htons(portno);
+    len=sizeof(serv_addr);
+    strcpy(buff,"START");
+    printf("\nSending message to Node %d: %s",i,buff);
+    if((nbytes=sendto(sockfd,buff,strlen(buff)+1,0,(struct sockaddr*)&serv_addr,len))<0){
+      perror("Can't send");
+    }
+  }
 }
 
 unsigned long long oat_hash(const char *p, int len)
@@ -92,7 +126,7 @@ void printFiles(vector<vector<string> > file_map, int ind, char* buf){
 }
 int main(int argc, char *argv[])
 {
-  int sockfd,portno;
+  int portno;
   socklen_t len;
   int nbytes;
   char buffer[MAXSIZE];
@@ -107,14 +141,12 @@ int main(int argc, char *argv[])
   
   bzero((char*)&serv_addr,sizeof(serv_addr));
   unsigned long long hash;
-  vector<address_hash_pair> node_info;
   pair<string,int> node_addr;
   string fname;
   int node_n,file_n,i,j,port;
   cout<<"Enter number of nodes:";
   cin>>node_n;
   char buff[100];
-  string host,result; 
   for (i = 0; i < node_n; ++i)
   {
     cout<<"\nNode "<<i<<" Enter host address and port separated by space:";
@@ -132,7 +164,7 @@ int main(int argc, char *argv[])
     address_hash_pair x = node_info.at(i);
     cout<<"\n"<<i<<" "<<x.first.first<<":"<<x.first.second<<"   "<<x.second;
   }
-  cout<<"\nEnter number of files:";
+  /*cout<<"\nEnter number of files:";
   cin>>file_n;
   for (i = 0; i < node_n; ++i)
   {
@@ -147,7 +179,7 @@ int main(int argc, char *argv[])
     file_map.at(j).push_back(fname);
     cout<<hash;
     cout<<"\n"<<fname<<" will be stored at Node "<<j;
-  }
+  }*/
   for (i = 0; i < node_n; ++i)
   {
     address_hash_pair x = node_info.at(i);
@@ -164,13 +196,14 @@ int main(int argc, char *argv[])
     serv_addr.sin_port=htons(portno);
     len=sizeof(serv_addr);
     printSucPred(node_info,i,buffer);
-    printFiles(file_map,i,buffer+strlen(buffer));
+    //printFiles(file_map,i,buffer+strlen(buffer));
     printf("\nSending message to Node %d: %s",i,buffer);
     if((nbytes=sendto(sockfd,buffer,strlen(buffer)+1,0,(struct sockaddr*)&serv_addr,len))<0){
       perror("Can't send");
     }
-
   }
+   signal(SIGTSTP, intHandler);
+   while(1){}
   
   return 0;
 }

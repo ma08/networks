@@ -24,6 +24,8 @@ using namespace std;
 typedef pair<string, int> address_pair;
 typedef pair<address_pair, unsigned long long> address_hash_pair;
 
+typedef map<string, address_pair> file_info; 
+
 void SigCatcher(int n)
 {
     pid_t kidpid=waitpid(-1,NULL,WNOHANG);
@@ -101,6 +103,24 @@ string recvDatagram(int sockfd,struct sockaddr_in* client_addr=NULL){
   }
   return string("");
 }
+int sendToAdr(string s, int sockfd,address_pair x){
+    int portno;
+    socklen_t len;
+    int nbytes;
+    char buffer[MAXSIZE];
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
+    strcpy(buffer,s.c_str());
+    bzero((char*)&serv_addr,sizeof(serv_addr));
+    server=gethostbyname(x.first.c_str());
+    portno=x.second;
+    serv_addr.sin_family=AF_INET;
+    bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
+    serv_addr.sin_port=htons(portno);
+    len=sizeof(serv_addr);
+    nbytes=sendto(sockfd,buffer,strlen(buffer)+1,0,(struct sockaddr*)&serv_addr,len);
+    return nbytes;
+  }
 
 class Node
 {
@@ -159,25 +179,9 @@ public:
   Node *pred_point=NULL;
   static address_pair origin;
   int node_is_end,node_is_start;
+  int stream_port;
 
-  int sendToAdr(string s, int sockfd,address_pair x){
-    int portno;
-    socklen_t len;
-    int nbytes;
-    char buffer[MAXSIZE];
-    struct hostent *server;
-    struct sockaddr_in serv_addr;
-    strcpy(buffer,s.c_str());
-    bzero((char*)&serv_addr,sizeof(serv_addr));
-    server=gethostbyname(x.first.c_str());
-    portno=x.second;
-    serv_addr.sin_family=AF_INET;
-    bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
-    serv_addr.sin_port=htons(portno);
-    len=sizeof(serv_addr);
-    nbytes=sendto(sockfd,buffer,strlen(buffer)+1,0,(struct sockaddr*)&serv_addr,len);
-    return nbytes;
-  }
+  
 
   int sendToMe(string s,int sockfd){
     int portno;
@@ -199,6 +203,8 @@ public:
   }
 
   address_pair* find(string s,int sockfd){
+    char message[100];
+    char* token;
     unsigned long long hash=oat_hash(s.c_str(),s.length());
     printf("\n\n---------%s-----%d--------",this->cur.first.first.c_str(),this->cur.first.second);
     fflush(stdout);
@@ -208,12 +214,16 @@ public:
         return NULL;
       }
       string re="FILE "+s;
-      this->sendToAdr(re,sockfd,this->succ.first);
+      sendToAdr(re,sockfd,this->succ.first);
       re=recvDatagram(sockfd);
       if(re[0]=='S'&&re[1]=='U'){
         string y=re.substr(8);
-        int x=atoi(y.c_str());
-        return new address_pair(this->succ.first.first,x);
+        strcpy(message,y.c_str());
+        token = strtok(message,"$");
+        y = string(token);
+        token = strtok(NULL,"$");
+        int x=atoi(token);
+        return new address_pair(y,x);
       }
       cout<<"\n\n----"<<re;
       printf("\n\nQuerying---------%s-----%d--------",this->succ.first.first.c_str(),this->succ.first.second);
@@ -225,12 +235,16 @@ public:
         return NULL;
       }
       string re="FILE "+s;
-      this->sendToAdr(re,sockfd,this->pred.first);
+      sendToAdr(re,sockfd,this->pred.first);
       re=recvDatagram(sockfd);
       if(re[0]=='S'&&re[1]=='U'){
         string y=re.substr(8);
-        int x=atoi(y.c_str());
-        return new address_pair(this->pred.first.first,x);
+        strcpy(message,y.c_str());
+        token = strtok(message,"$");
+        y = string(token);
+        token = strtok(NULL,"$");
+        int x=atoi(token);
+        return new address_pair(y,x);
       }
       cout<<"\n\n----"<<re;
       printf("\n\nQuerying---------%s-----%d--------",this->pred.first.first.c_str(),this->pred.first.second);
@@ -249,11 +263,73 @@ private:
 address_pair Node::origin;
 
 
+void fileShare(int sockfd, Node& node, vector<string>& file_list_uploaded, file_info& file_map, string* file_name,address_pair* store_add,char *m=NULL){
+  char buf[100];
+  if(store_add==NULL){
+    strcpy(buf,m);
+    char *token;
+    token = strtok(buf+6,"$");
+    file_name=new string(token);
+    token = strtok(NULL,"$");
+    strcpy(buf,token);
+    token = strtok(NULL,"$");
+    store_add = new address_pair(string(buf),atoi(token));
+  }
+  printf("I am here");
+  fflush(stdout);
+  unsigned long long hash=oat_hash(file_name->c_str(),file_name->length());
+  int startedHere=node.cur.first.first.compare(store_add->first)==0&&node.cur.first.second==store_add->second;
+  address_pair target;
+  if(hash<=node.cur.second){
+    if(hash>node.pred.second || node.node_is_start){
+      //belongs here
+      printf("I am here foo");
+      fflush(stdout);
+      if(startedHere){
+        file_list_uploaded.push_back(*file_name);
+      }else{
+        file_map.insert(make_pair(*file_name,*store_add));
+      }
+      return;
+    }else{
+      target=node.pred.first;
+      //send to pred
+    }
+  }else{
+    if(node.node_is_start && hash>node.pred.second){
+      //belongs here
+      printf("I am here doo");
+      fflush(stdout);
+      if(startedHere){
+        file_list_uploaded.push_back(*file_name);
+      }else{
+        file_map.insert(make_pair(*file_name,*store_add));
+      }
+      return;
+    }else{
+      //send to succ
+      target=node.succ.first;
+    }
+  }
+
+  printf("I am here goo");
+  fflush(stdout);
+  if(m==NULL){
+    m = (char *)(malloc(sizeof(char)*100));
+    strcpy(m,"SHARE$");
+    strcat(m,file_name->c_str());
+    sprintf(m+strlen(m),"$%s$%d",store_add->first.c_str(),store_add->second);
+  }
+  sendToAdr(string(m),sockfd,target);
+  cout<<"\n\n Sending file share message "<<string(m);
+  fflush(stdout);
+}
 
 int main(int argc, char *argv[])
 {
-
-  vector<string> file_list;
+  int n;
+  file_info file_map;
+  vector<string> file_list_uploaded;
   int sockfd,server_port;
   unsigned long long hash;
   string s;
@@ -306,12 +382,23 @@ int main(int argc, char *argv[])
   strcpy(buffer_2,token);
   address_pair y=make_pair(string(buffer),atoi(buffer_2));
   node.succ = make_pair(y,getHash(y));
-  while((token=strtok(NULL,"$"))!=NULL){
+  /*while((token=strtok(NULL,"$"))!=NULL){
     file_list.push_back(string(token));
     printf("\n\t%s",token);
-  }
+  }*/
+  printf("\nEnter number of files to upload: ");
+  cin>>n;
+  int i;
   node.node_is_start=node.cur.second<node.pred.second&&node.cur.second<node.succ.second;
   node.node_is_end=node.cur.second>node.pred.second&&node.cur.second>node.succ.second;
+  for (i = 0; i < n; ++i)
+  {
+    cout<<"\nEnter the fie name: ";
+    cin>>s;
+    file_list_uploaded.push_back(s);
+    
+  }
+  
   vector<string>::iterator it;
   fflush(stdout);
 
@@ -329,6 +416,21 @@ int main(int argc, char *argv[])
     fflush(stdout);
     server_here_port=rand()%5001+10001;
     serv_addr_stream.sin_port=htons(server_here_port);
+  }
+  node.stream_port=server_here_port;
+  address_pair *stream_add=new address_pair(node.cur.first.first,server_here_port);
+
+  for (i = 0; i < n; ++i)
+  {
+    fileShare(sockfd,node,file_list_uploaded,file_map,&file_list_uploaded[i],stream_add,NULL);
+  }
+
+  while(1){
+    string msg = recvDatagram(sockfd);
+    if(msg.compare(string("START"))==0)
+      break;
+    strcpy(buffer,msg.c_str());
+    fileShare(sockfd,node,file_list_uploaded,file_map,NULL,NULL,buffer);
   }
   int pid=fork();
   int pid2;
@@ -352,8 +454,8 @@ int main(int argc, char *argv[])
       while(1){
         cout<<"\nEnter file name to download: ";
         cin>>s;
-        it=find(file_list.begin(),file_list.end(),s);
-        if(it!=file_list.end()){
+        it=find(file_list_uploaded.begin(),file_list_uploaded.end(),s);
+        if(it!=file_list_uploaded.end()){
           cout<<"\nThe file is already present";
         }else{
           char buffer_3[100];
@@ -460,12 +562,20 @@ int main(int argc, char *argv[])
         else if(s[0]=='F'){
           string y=s.substr(5);
           cout<<"\n\n"<<y;
-          it=find(file_list.begin(),file_list.end(),y);
-          if(it!=file_list.end()){
-            strcpy(buffer,"SUCCESS ");
-            sprintf(buffer+strlen(buffer),"%d",server_here_port);
+          it=find(file_list_uploaded.begin(),file_list_uploaded.end(),y);
+          if(it!=file_list_uploaded.end()){
+            strcpy(buffer,"SUCCESS$");
+            sprintf(buffer+strlen(buffer),"%s$%d",node.cur.first.first.c_str(),node.stream_port);
           }else{
-            strcpy(buffer,"FAIL");
+            //check in file_map
+            string y=s.substr(5);
+            file_info::iterator it=file_map.find(y);
+            if(it!=file_map.end()){
+              strcpy(buffer,"SUCCESS$");
+              sprintf(buffer+strlen(buffer),"%s$%d",it->second.first.c_str(),it->second.second);
+            }else{
+              strcpy(buffer,"FAIL");
+            }
           }
         }
         printf("\n\nResponse %s",buffer);
