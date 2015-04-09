@@ -25,7 +25,33 @@ typedef pair<string, int> address_pair;
 typedef pair<address_pair, unsigned long long> address_hash_pair;
 
 typedef map<string, address_pair> file_info; 
+int sockfd,server_port;
+int sendToAdr(string s, int sockfd,address_pair x){
+    int portno;
+    socklen_t len;
+    int nbytes;
+    char buffer[MAXSIZE];
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
+    strcpy(buffer,s.c_str());
+    bzero((char*)&serv_addr,sizeof(serv_addr));
+    server=gethostbyname(x.first.c_str());
+    portno=x.second;
+    serv_addr.sin_family=AF_INET;
+    bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
+    serv_addr.sin_port=htons(portno);
+    len=sizeof(serv_addr);
+    nbytes=sendto(sockfd,buffer,strlen(buffer)+1,0,(struct sockaddr*)&serv_addr,len);
+    return nbytes;
+  }
 
+
+void intHandler(int dummy=0) {
+  string s="LEAVE";
+  address_pair ad=make_pair(string("127.0.0.1"),9004);
+  sendToAdr(s,sockfd,ad);
+  
+}
 unsigned long long oat_hash(const char *p, int len)
 {
     
@@ -120,25 +146,6 @@ string recvDatagram(int sockfd,struct sockaddr_in* client_addr=NULL){
   }
   return string("");
 }
-int sendToAdr(string s, int sockfd,address_pair x){
-    int portno;
-    socklen_t len;
-    int nbytes;
-    char buffer[MAXSIZE];
-    struct hostent *server;
-    struct sockaddr_in serv_addr;
-    strcpy(buffer,s.c_str());
-    bzero((char*)&serv_addr,sizeof(serv_addr));
-    server=gethostbyname(x.first.c_str());
-    portno=x.second;
-    serv_addr.sin_family=AF_INET;
-    bcopy((char*)server->h_addr,(char*)&serv_addr.sin_addr.s_addr,server->h_length);
-    serv_addr.sin_port=htons(portno);
-    len=sizeof(serv_addr);
-    nbytes=sendto(sockfd,buffer,strlen(buffer)+1,0,(struct sockaddr*)&serv_addr,len);
-    return nbytes;
-  }
-
 class FingerTable{
   public:
     //max size is 32
@@ -270,6 +277,31 @@ public:
     print_file_share_info(f);
     this->update_finger_table(ad);
     this->print_succ_pred();
+  }
+  void remove_node(address_pair ad,address_pair udp,int sockfd,file_info& f){
+    file_info::iterator t;
+    int i;
+    vector<string> files_to_be_removed;
+    for(t=f.begin();t!=f.end();t++){
+      cout<<"\n"<<t->second.first<<":"<<t->second.second<<" "<<ad.first<<":"<<ad.second;
+      fflush(stdout);
+      if(adcompare(t->second,ad)){
+        cout<<"\nyeeeeeee";
+      fflush(stdout);
+        files_to_be_removed.push_back(t->first);
+      }
+    }
+    for (i = 0; i < files_to_be_removed.size(); ++i)
+    {
+      f.erase(files_to_be_removed[i]);
+    }
+    for (i = 0; i < this->finger.finger.size(); ++i)
+    {
+      if(adcompare(this->finger.finger[i].first,udp)){
+        address_pair new_ad=this->find_successor(sockfd,this->start(i));
+        this->finger.finger[i]=make_pair(new_ad,getHash(new_ad));
+      }
+    }
   }
   void add_node(int sockfd,struct sockaddr_in client_addr,file_info& f){
     bool isSuc=false;
@@ -423,6 +455,41 @@ public:
     }
     sprintf(buf,"SHARE$%s$%s$%d",file_name.c_str(),this->cur.first.first.c_str(),this->stream_port);
     sendToAdr(string(buf),sockfd,ad);
+  }
+  void exit(int sockfd,file_info& file_map){
+    address_pair stream_pair=make_pair(this->cur.first.first,this->stream_port);
+    char m1[100];
+    char m2[100];
+    char m3[100];
+    sprintf(m1," %d",this->succ.first.second);
+    sprintf(m2," %d",this->pred.first.second);
+    sprintf(m3," %d %d",this->stream_port,this->cur.first.second);
+    string msgtopred="UPS ";
+    string msgtosucc="UPP ";
+
+    msgtopred=msgtopred+this->succ.first.first;
+    msgtopred=msgtopred+" "+string(m1);
+
+    msgtosucc=msgtosucc+this->pred.first.first;
+    msgtosucc=msgtosucc+" "+string(m2);
+
+    sendToAdr(msgtopred,sockfd,this->pred.first);
+    sendToAdr(msgtosucc,sockfd,this->succ.first);
+    sleep(1);
+
+    address_pair node0 = make_pair(string("127.0.0.1"),9004);
+    string l = string("LEAVE ")+this->cur.first.first+string(m3);
+    sendToAdr(l,sockfd,node0);
+
+    char buff[1000];
+    sprintf(buff,"MSHARE");
+    file_info::iterator it;
+    for(it=file_map.begin();it!=file_map.end();it++){
+      if(!adcompare(it->second,stream_pair)){
+        sprintf(buff+strlen(buff),"$%s$%s$%d",it->first.c_str(),it->second.first.c_str(),it->second.second);
+      }
+    }
+    sendToAdr(string(buff),sockfd,this->succ.first);
   }
   address_pair find_successor(int sockfd, int id,const char* req=NULL){
     /*printf("\n %d %llu",id,this->cur.second);*/
@@ -627,7 +694,6 @@ int main(int argc, char *argv[])
   int n;
   file_info file_map;
   vector<string> file_list_uploaded;
-  int sockfd,server_port;
   unsigned long long hash;
   string s;
   socklen_t clilen;
@@ -766,14 +832,18 @@ int main(int argc, char *argv[])
         string path;
         cout<<"\nEnter file name to download: ";
         cin>>s;
-        printf("\nGive path to save the file:");
-        cin>>path;
+        string st="DOWNLOAD ";
+        if(s.compare("exit")!=0){
+          printf("\nGive path to save the file:");
+          cin>>path;
+          st=st+s+"$"+path;
+        }else{
+          st=st+s;
+        }
         it=find(file_list_uploaded.begin(),file_list_uploaded.end(),s);
         if(it!=file_list_uploaded.end()){
           cout<<"\nThe file is already present";
         }else{
-          string st="DOWNLOAD ";
-          st=st+s+"$"+path;
           sendToAdr(st,sockfd,node.cur.first);
         }
       }
@@ -781,6 +851,7 @@ int main(int argc, char *argv[])
       /*freopen("inp", "r", stdin);*/
       /*freopen("output", "w", stdout);*/
       string new_node_msg;
+      string leave_msg;
       while(1){
         /*printf("reeeeeeeeeeeeeeeeee");*/
         fflush(stdout);
@@ -817,6 +888,10 @@ int main(int argc, char *argv[])
           int portno_stream;
           token=strtok(m,"$");
           y=string(token);
+          if(strcmp(token,"exit")==0){
+            node.exit(sockfd,file_map);
+            exit(1);
+          }
           token=strtok(NULL,"$");
           strcpy(path,token);
           address_pair* x = node.find(y,sockfd,file_map);
@@ -969,6 +1044,7 @@ int main(int argc, char *argv[])
           fflush(stdout);
           node.add_node(sockfd,client_addr,file_map);
         }
+        
         else if(s[0]=='N'&&s[1]=='E'){
           /*printf("newwwwwwwwwww");*/
           fflush(stdout);
@@ -1004,6 +1080,67 @@ int main(int argc, char *argv[])
           node.print_finger();
           fflush(stdout);
 
+        }
+        else if(s[0]=='U'&&s[1]=='P'&&s[2]=='S'){
+          string y=s.substr(4);
+          char buffer[100];
+          char m[100];
+          char buffer_2[100];
+          strcpy(m,y.c_str());
+          char *token;
+          strcpy(m,y.c_str());
+          token=strtok(m," ");
+          strcpy(buffer,token);
+          token=strtok(NULL," ");
+          strcpy(buffer_2,token);
+          address_pair x=make_pair(string(buffer),atoi(buffer_2));
+          node.succ=make_pair(x,getHash(x));
+          node.print_succ_pred();
+          fflush(stdout);
+        }
+        else if(s[0]=='U'&&s[1]=='P'&&s[2]=='P'){
+          string y=s.substr(4);
+          char buffer[100];
+          char m[100];
+          char buffer_2[100];
+          strcpy(m,y.c_str());
+          char *token;
+          strcpy(m,y.c_str());
+          token=strtok(m," ");
+          strcpy(buffer,token);
+          token=strtok(NULL," ");
+          strcpy(buffer_2,token);
+          address_pair x=make_pair(string(buffer),atoi(buffer_2));
+          node.pred=make_pair(x,getHash(x));
+          node.print_succ_pred();
+          fflush(stdout);
+        }
+        else if(s[0]=='L'&&s[1]=='E'){
+          if(leave_msg.compare(s)==0){
+            printf("\n stopping");
+            continue;;
+          }
+          leave_msg=s;
+          string y=s.substr(6);
+          char buffer[100];
+          char m[100];
+          char buffer_2[100];
+          strcpy(m,y.c_str());
+          char *token;
+          strcpy(m,y.c_str());
+          token=strtok(m," ");
+          strcpy(buffer,token);
+          token=strtok(NULL," ");
+          strcpy(buffer_2,token);
+          token=strtok(NULL," ");
+          address_pair x=make_pair(string(buffer),atoi(buffer_2));
+          address_pair udp_ad=make_pair(string(buffer),atoi(token));
+          node.remove_node(x,udp_ad,sockfd,file_map);
+          printf("\n\n-----------------------");
+          print_file_share_info(file_map);
+          node.print_finger();
+          fflush(stdout);
+          sendToAdr(s,sockfd,node.succ.first);
         }
       }
     }
