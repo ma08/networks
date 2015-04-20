@@ -10,10 +10,10 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <utility>      // std::pair, std::make_pair
-#include <string>       // std::string
-#include <iostream>     // std::cout
-#include <vector>     // std::cout
+#include <utility>    
+#include <string>     
+#include <iostream>   
+#include <vector>     
 #include <map>
 #define MAXSIZE 1000
 using namespace std;
@@ -92,11 +92,6 @@ int mod(int a, int b)
 
 void printSucPred(vector<address_hash_pair>& node_info,int ind, char* buf){
     char *p;
-    /*if(ind==0){
-      printf("\n-----------%d-----------",mod(ind-1,node_info.size()));
-    }
-    fflush(stdout);*/
-    
     address_hash_pair pred = node_info.at(mod(ind-1,node_info.size()));
     address_hash_pair suc = node_info.at((ind+1)%node_info.size());
     strcpy(buf,pred.first.first.c_str());
@@ -105,10 +100,6 @@ void printSucPred(vector<address_hash_pair>& node_info,int ind, char* buf){
     strcat(buf,suc.first.first.c_str());
     p=buf+strlen(buf);
     sprintf(p,"$%d$",suc.first.second);
-    /*printf("\n------Node %d----------",ind);*/
-    /*printf("\n%s",buf);*/
-
-
 }
 
 void printFiles(vector<vector<string> > file_map, int ind, char* buf){
@@ -121,8 +112,6 @@ void printFiles(vector<vector<string> > file_map, int ind, char* buf){
     strcat(buf,"$");
   }
   buf[strlen(buf)]='\0';
-  /*printf("\n------Node %d----------",ind);*/
-  /*printf("\n---%s",buf);*/
 }
 int main(int argc, char *argv[])
 {

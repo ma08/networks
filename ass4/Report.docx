@@ -1,0 +1,18 @@
+﻿       12CS30015 AND 12CS30035
+         	   ANALYSIS
+
+For exponential backoff:
+
+On observation, we see that for exponential backoff, with decrease in p-persistence, Throughput  and Jitter are in the same range for all values and Forwarding Delay is increasing with decrease in p-persistence.The graphs of Jitter and Forwarding Delay are almost similar for all values of p.
+The delay and Jitter increase with decrease in p as more packets are backed off instead of transmitted due to the probability induced.
+
+For additive backoff:
+
+With decrease in p-persistence, Throughput is decreasing slightly and also not saturating like in exponential backoff.Forwarding Delay increases till 256KBps and decreases and saturates for each value of p and we observe that Delay increases with decrease in p due to increase in instances of backoff. The same is observed with Jitter too. Delay is increasing with decrease in p as packets which would have been transmitted if p=1 were backed off.
+
+
+For the same value of p, Throughput of exponential backoff is greater than that of additive backoff.
+
+We see that Forwarding Delay and Jitter increases greatly from exponential to additive backoff.
+
+ 

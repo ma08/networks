@@ -12,11 +12,11 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <utility>      // std::pair, std::make_pair
+#include <utility>    
 #include <fcntl.h>
-#include <string>       // std::string
-#include <iostream>     // std::cout
-#include <vector>     // std::cout
+#include <string>     
+#include <iostream>   
+#include <vector>    
 #include <map>
 using namespace std;
 #define CHUNKSIZE 32
@@ -95,7 +95,6 @@ string recvDatagram(int sockfd,struct sockaddr_in* client_addr=NULL){
   char message[MAXSIZE];
   socklen_t clilen=sizeof(*client_addr);
   int nbytes=recvfrom(sockfd,message,MAXSIZE,0,(struct sockaddr*)client_addr,&clilen);
-  printf("-------------%d--------------",nbytes);
   printf("\n\n%s",message);
   fflush(stdout);
   if(nbytes>0){
@@ -149,7 +148,6 @@ public:
     strcpy(message,s.c_str());
     token=strtok(message,"$");
     strcpy(buffer,token);
-    /*printf("\n\t%s",token);*/
     token=strtok(NULL,"$");
     strcpy(buffer_2,token);
     address_pair x=make_pair(string(buffer),atoi(buffer_2));
@@ -206,7 +204,6 @@ public:
     char message[100];
     char* token;
     unsigned long long hash=oat_hash(s.c_str(),s.length());
-    printf("\n\n---------%s-----%d--------",this->cur.first.first.c_str(),this->cur.first.second);
     fflush(stdout);
     
     if(hash>cur.second){
@@ -275,15 +272,12 @@ void fileShare(int sockfd, Node& node, vector<string>& file_list_uploaded, file_
     token = strtok(NULL,"$");
     store_add = new address_pair(string(buf),atoi(token));
   }
-  printf("I am here");
   fflush(stdout);
   unsigned long long hash=oat_hash(file_name->c_str(),file_name->length());
   int startedHere=node.cur.first.first.compare(store_add->first)==0&&node.cur.first.second==store_add->second;
   address_pair target;
   if(hash<=node.cur.second){
     if(hash>node.pred.second || node.node_is_start){
-      //belongs here
-      printf("I am here foo");
       fflush(stdout);
       if(startedHere){
         file_list_uploaded.push_back(*file_name);
@@ -297,8 +291,6 @@ void fileShare(int sockfd, Node& node, vector<string>& file_list_uploaded, file_
     }
   }else{
     if(node.node_is_start && hash>node.pred.second){
-      //belongs here
-      printf("I am here doo");
       fflush(stdout);
       if(startedHere){
         file_list_uploaded.push_back(*file_name);
@@ -312,7 +304,6 @@ void fileShare(int sockfd, Node& node, vector<string>& file_list_uploaded, file_
     }
   }
 
-  printf("I am here goo");
   fflush(stdout);
   if(m==NULL){
     m = (char *)(malloc(sizeof(char)*100));
@@ -352,8 +343,6 @@ int main(int argc, char *argv[])
   serv_addr.sin_family=AF_INET;
   serv_addr.sin_addr.s_addr=INADDR_ANY;
   serv_addr.sin_port=htons(server_port);
-  /*inet_ntop(AF_INET,&(serv_addr.sin_addr),buffer_2,len);*/
-  /*printf("\n----------%s--------",buffer_2);*/
   fflush(stdout);
   if(bind(sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr))<0) {
     perror("ERROR on binding");
@@ -371,7 +360,6 @@ int main(int argc, char *argv[])
   fflush(stdout);
   token=strtok(message,"$");
   strcpy(buffer,token);
-  /*printf("\n\t%s",token);*/
   token=strtok(NULL,"$");
   strcpy(buffer_2,token);
   x=make_pair(string(buffer),atoi(buffer_2));
@@ -382,10 +370,6 @@ int main(int argc, char *argv[])
   strcpy(buffer_2,token);
   address_pair y=make_pair(string(buffer),atoi(buffer_2));
   node.succ = make_pair(y,getHash(y));
-  /*while((token=strtok(NULL,"$"))!=NULL){
-    file_list.push_back(string(token));
-    printf("\n\t%s",token);
-  }*/
   printf("\nEnter number of files to upload: ");
   cin>>n;
   int i;
@@ -446,11 +430,9 @@ int main(int argc, char *argv[])
       int port=10000;
       serv_addr.sin_port=htons(port);
       while(bind(sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr))<0) {
-        /*printf("\nERROR on binding to %d",port);*/
         port=rand()%5001+10001;
         serv_addr.sin_port=htons(port);
       }
-      /*while(1){}*/
       while(1){
         cout<<"\nEnter file name to download: ";
         cin>>s;
@@ -472,7 +454,6 @@ int main(int argc, char *argv[])
             continue;
           }
           portno_stream=x->second;
-          printf("\n\n I am here %d",portno_stream);
           fflush(stdout);
           server_stream=gethostbyname(x->first.c_str());
           bzero((char*)&serv_addr_stream,sizeof(serv_addr_stream));
@@ -480,9 +461,6 @@ int main(int argc, char *argv[])
           bcopy((char*)server_stream->h_addr,(char*)&serv_addr_stream.sin_addr.s_addr,server_stream->h_length);
           serv_addr_stream.sin_port=htons(portno_stream);
           while(connect(sockfd_stream,(struct sockaddr*)&serv_addr_stream,sizeof(serv_addr_stream))<0) {perror("Can't connect");}
-
-            ;
-          printf("\n\n I am here %d",portno_stream);
           strcpy(buffer_3,"REQUEST ");
           strcat(buffer_3,s.c_str());
           nbytes=write(sockfd_stream,buffer_3,strlen(buffer_3));
@@ -490,10 +468,8 @@ int main(int argc, char *argv[])
             perror("writing: ");
           }
           fflush(stdout);
-          printf("\n\n I am here %d",portno_stream);
           fflush(stdout);
           nbytes=read(sockfd_stream,buffer,20);
-          printf("\n\n I am here %s",buffer);
           fflush(stdout);
           if(nbytes<0){
             perror("Can't read");
@@ -508,7 +484,6 @@ int main(int argc, char *argv[])
               strcat(buffer_3,"/");
             }
             strcat(buffer_3,filename);
-            printf("\n\n%s\n",buffer_3);
             int fd_to=open(buffer_3,O_WRONLY|O_CREAT,0666);
             if(fd_to<0){
               perror("Can't write/create");
@@ -541,10 +516,7 @@ int main(int argc, char *argv[])
         }
       }
     }else{
-      /*freopen("inp", "r", stdin);*/
-      /*freopen("output", "w", stdout);*/
       while(1){
-        /*printf("reeeeeeeeeeeeeeeeee");*/
         fflush(stdout);
         string s=recvDatagram(sockfd,&client_addr);
         fflush(stdout);
@@ -590,7 +562,6 @@ int main(int argc, char *argv[])
       printf("Accepting");
       fflush(stdout);
       newsockfd=accept(sockfd_stream,(struct sockaddr*)&client_addr,&clilen);
-      printf("\n\nAccepted");
       fflush(stdout);
       if(newsockfd<0) 
         perror("ERROR on accept");
